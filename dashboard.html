@@ -20,18 +20,22 @@
 <nav class="navbar navbar-dark bg-dark mb-4 shadow">
     <div class="container-fluid justify-content-center gap-3">
         <a href="index.html" class="btn btn-outline-light">🛍️ बिलिंग करा</a>
+        <a href="inventory.html" class="btn btn-outline-light">📦 स्टॉक जोडा</a>
         <a href="dashboard.html" class="btn btn-primary">📊 डॅशबोर्ड</a>
     </div>
 </nav>
 
 <div class="container mb-5" style="max-width: 800px;">
     <h3 class="text-center mb-4 text-secondary fw-bold">📈 आजचा व्यवसाय अहवाल</h3>
+    
+    <!-- Date Filter -->
     <div class="d-flex justify-content-center mb-4">
         <div class="input-group" style="max-width: 300px;">
             <span class="input-group-text bg-primary text-white">📅 तारीख निवडा</span>
             <input type="date" id="filterDate" class="form-control" onchange="fetchDashboardData()">
         </div>
     </div>
+    
     <div class="text-center mb-4" id="loadingDiv">
         <div class="spinner-border text-primary" role="status"></div>
         <p class="mt-2 text-muted">डेटा लोड होत आहे...</p>
@@ -80,49 +84,68 @@
     </div>
 </div>
 
+<!-- Supabase Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- तुमची Config फाईल -->
+<script src="config.js"></script>
+
 <script>
-    // 🔴 इथे तुमची तीच Google Web App URL टाका जी index.html मध्ये टाकली आहे 🔴
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIwJeohLOaEDDnDM7Pylw5rPRfZl7cv5a0pogMlyr8rqa2MRFeee08Tsk1JcDhrdE_wA/exec";
+    async function fetchDashboardData() {
+        document.getElementById('loadingDiv').style.display = 'block';
+        document.getElementById('dashboardContent').style.display = 'none';
 
-    function fetchDashboardData() {
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "getDashboardData" })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
-                // Hide loader, show content
-                document.getElementById('loadingDiv').style.display = 'none';
-                document.getElementById('dashboardContent').style.display = 'block';
+        // कॅलेंडरमधून तारीख घेणे आणि DD/MM/YYYY फॉरमॅट करणे
+        let dateInput = document.getElementById('filterDate').value;
+        let targetDate = new Date().toLocaleDateString('en-GB'); // जर तारीख निवडली नसेल, तर आजची तारीख घ्या
+        
+        if(dateInput) {
+            let [y, m, d] = dateInput.split('-');
+            targetDate = `${d}/${m}/${y}`;
+        }
 
-                // Set Values
-                document.getElementById('todayDate').innerText = data.date;
-                document.getElementById('todayCollection').innerText = data.collection;
-                document.getElementById('todayProfit').innerText = data.profit;
+        try {
+            // Supabase मधून त्या विशिष्ट तारखेचा डेटा घेणे
+            const { data, error } = await supabase.from('sales').select('*').eq('sale_date', targetDate);
 
-                // Populate Table
-                let tableBody = document.getElementById('salesTableBody');
-                tableBody.innerHTML = ""; // Clear existing
+            if (error) throw error;
+
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+
+            let totalCollection = 0;
+            let totalProfit = 0;
+            let tableBody = document.getElementById('salesTableBody');
+            tableBody.innerHTML = ""; 
+            
+            document.getElementById('todayDate').innerText = targetDate;
+
+            if (data && data.length > 0) {
+                document.getElementById('noDataMsg').style.display = 'none';
                 
-                if (data.salesList.length > 0) {
-                    data.salesList.forEach(sale => {
-                        let row = `<tr>
-                            <td class="text-primary fw-semibold">${sale.invoice}</td>
-                            <td>${sale.mobile}</td>
-                            <td class="text-end fw-bold text-success">₹ ${sale.amount}</td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
-                    });
-                } else {
-                    document.getElementById('noDataMsg').style.display = 'block';
-                }
+                // डेटा उलट क्रमाने (नवीन बिले वरती) दाखवण्यासाठी .reverse()
+                data.reverse().forEach(sale => {
+                    totalCollection += parseFloat(sale.final_amount) || 0;
+                    totalProfit += parseFloat(sale.profit) || 0;
+
+                    let row = `<tr>
+                        <td class="text-primary fw-semibold">${sale.invoice_no}</td>
+                        <td>${sale.mobile}</td>
+                        <td class="text-end fw-bold text-success">₹ ${sale.final_amount}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                document.getElementById('noDataMsg').style.display = 'block';
             }
-        })
-        .catch(err => {
-            alert("❌ डेटा लोड करताना एरर आली. कृपया पेज रिफ्रेश करा.");
+
+            // एकूण विक्री आणि नफा अपडेट करणे
+            document.getElementById('todayCollection').innerText = totalCollection;
+            document.getElementById('todayProfit').innerText = totalProfit;
+
+        } catch (error) {
+            alert("❌ डेटा लोड करताना एरर आली: " + error.message);
             document.getElementById('loadingDiv').innerHTML = `<p class="text-danger">डेटा लोड होऊ शकला नाही.</p>`;
-        });
+        }
     }
 </script>
 
