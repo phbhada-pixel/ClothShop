@@ -45,37 +45,42 @@
     </div>
 </div>
 
-<script>
-    // तुमची Google Apps Script URL इथे टाका
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIwJeohLOaEDDnDM7Pylw5rPRfZl7cv5a0pogMlyr8rqa2MRFeee08Tsk1JcDhrdE_wA/exec";
+<!-- Supabase Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- तुमची Config फाईल -->
+<script src="config.js"></script>
 
-    document.getElementById('inventoryForm').addEventListener('submit', function(e) {
+<script>
+    document.getElementById('inventoryForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         document.getElementById('submitBtn').innerText = "सेव्ह होत आहे...";
         document.getElementById('submitBtn').disabled = true;
 
-        let payload = {
-            action: "addInventory",
-            itemName: document.getElementById('itemName').value,
-            purchasePrice: document.getElementById('purchasePrice').value,
-            sellingPrice: document.getElementById('sellingPrice').value,
-            stockIn: document.getElementById('stockIn').value
-        };
+        let stockIn = parseInt(document.getElementById('stockIn').value) || 0;
 
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
+        try {
+            // Supabase च्या 'inventory' टेबलमध्ये डेटा सेव्ह करणे
+            const { error } = await supabase.from('inventory').insert({
+                item_name: document.getElementById('itemName').value,
+                purchase_price: parseFloat(document.getElementById('purchasePrice').value) || 0,
+                selling_price: parseFloat(document.getElementById('sellingPrice').value) || 0,
+                stock_in: stockIn,
+                stock_out: 0,           // सुरुवातीला विकलेला माल शून्य असेल
+                stock_in_hand: stockIn  // सुरुवातीला शिल्लक माल आलेल्या मालाएवढाच असेल
+            });
+
+            if (!error) {
                 alert("✅ माल यशस्वीरित्या ॲड झाला!");
                 document.getElementById('inventoryForm').reset();
+            } else {
+                alert("❌ एरर आली: " + error.message);
             }
-            document.getElementById('submitBtn').innerText = "सेव्ह करा";
-            document.getElementById('submitBtn').disabled = false;
-        }).catch(err => alert("एरर आली. पुन्हा प्रयत्न करा."));
+        } catch (err) {
+            alert("❌ काहीतरी चूक झाली. पुन्हा प्रयत्न करा.");
+        }
+
+        document.getElementById('submitBtn').innerText = "सेव्ह करा";
+        document.getElementById('submitBtn').disabled = false;
     });
 </script>
 </body>
