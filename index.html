@@ -11,17 +11,28 @@
         .card { border-radius: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .form-control:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25); }
         .loader { display: none; margin-right: 8px; }
+        
+        /* प्रिंट पावतीसाठी CSS (Print Receipt Styles) */
+        @media print {
+            body * { visibility: hidden; }
+            #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
+            #receiptPrintArea { position: absolute; left: 0; top: 0; width: 100%; padding: 20px;}
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body>
-<!-- index.html च्या <body> टॅग च्या लगेच खाली हे पेस्ट करा -->
-<nav class="navbar navbar-dark bg-dark mb-4 shadow">
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-dark bg-dark mb-4 shadow no-print">
     <div class="container-fluid justify-content-center gap-3">
         <a href="index.html" class="btn btn-primary">🛍️ बिलिंग करा</a>
+        <a href="inventory.html" class="btn btn-outline-light">📦 स्टॉक जोडा</a>
         <a href="dashboard.html" class="btn btn-outline-light">📊 डॅशबोर्ड</a>
     </div>
 </nav>
-<div class="container mt-4 mb-5">
+
+<div class="container mt-2 mb-5 no-print">
     <h2 class="text-center mb-4 text-primary fw-bold">🛍️ कापड दुकान बिलिंग</h2>
 
     <div class="card p-4 mx-auto" style="max-width: 600px;">
@@ -82,8 +93,12 @@
             </button>
         </form>
 
-        <!-- WhatsApp Button (बिल सेव्ह झाल्यावर दिसेल) -->
-        <button id="whatsappBtn" class="btn btn-success btn-lg w-100 mt-3" style="display: none;" onclick="sendWhatsApp()">
+        <!-- पावती आणि पुढील ॲक्शन्स (बिल सेव्ह झाल्यावर दिसतील) -->
+        <button id="printBtn" class="btn btn-warning btn-lg w-100 mt-3 text-dark fw-bold" style="display: none;" onclick="window.print()">
+            🖨️ PDF पावती प्रिंट करा
+        </button>
+
+        <button id="whatsappBtn" class="btn btn-success btn-lg w-100 mt-2" style="display: none;" onclick="sendWhatsApp()">
             💬 WhatsApp वर पावती पाठवा
         </button>
         
@@ -93,9 +108,28 @@
     </div>
 </div>
 
+<!-- ================= प्रिंट होणारी पावती (Hidden Print Area) ================= -->
+<div id="receiptPrintArea" style="display: none;">
+    <h2 class="text-center fw-bold">आपले कापड दुकान</h2>
+    <p class="text-center border-bottom pb-2">पत्ता: तुमचा पत्ता इथे टाका | मो. 9876543210</p>
+    
+    <p><strong>बिल क्र:</strong> <span id="r_invoice"></span></p>
+    <p><strong>ग्राहकाचे नाव:</strong> <span id="r_name"></span></p>
+    <p><strong>मोबाईल:</strong> <span id="r_mobile"></span></p>
+    
+    <table class="table table-bordered mt-3">
+        <tr><th>तपशील</th><th class="text-end">रक्कम</th></tr>
+        <tr><td>खरेदी रक्कम</td><td class="text-end">₹ <span id="r_total"></span></td></tr>
+        <tr><td>सवलत (Discount)</td><td class="text-end">- ₹ <span id="r_discount"></span></td></tr>
+        <tr class="table-active"><th>अंतिम देय रक्कम</th><th class="text-end fs-5">₹ <span id="r_final"></span></th></tr>
+    </table>
+    <p class="text-center mt-4 fw-bold">धन्यवाद! पुन्हा नक्की भेट द्या.</p>
+</div>
+<!-- ========================================================================= -->
+
 <script>
     // 🔴 महत्त्वाची स्टेप: इथे तुमची Google Apps Script ची URL पेस्ट करा 🔴
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIwJeohLOaEDDnDM7Pylw5rPRfZl7cv5a0pogMlyr8rqa2MRFeee08Tsk1JcDhrdE_wA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjOii67G-LiDJ7BOJv99uvHtSgeoYqb-0GLyBKWu30CwOqHGxMLQn2q8-Fny1mjmomfA/exec";
 
     // १. जुना ग्राहक शोधणे (Auto Fetch Customer)
     function checkCustomer() {
@@ -107,6 +141,7 @@
             
             fetch(SCRIPT_URL, {
                 method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS Fix
                 body: JSON.stringify({ action: "getCustomer", mobile: mobile })
             })
             .then(res => res.json())
@@ -128,7 +163,7 @@
         }
     }
 
-    // २. रक्कम आणि नफा कॅल्क्युलेट करणे (Calculate Final Amount & Profit)
+    // २. रक्कम आणि नफा कॅल्क्युलेट करणे
     function calculateFinal() {
         let totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
         let discount = parseFloat(document.getElementById('discount').value) || 0;
@@ -141,7 +176,7 @@
         document.getElementById('profit').value = profit;
     }
 
-    // ३. बिल सेव्ह करणे (Submit Data to Google Sheet)
+    // ३. बिल सेव्ह करणे (Submit Data)
     document.getElementById('billingForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -161,13 +196,26 @@
 
         fetch(SCRIPT_URL, {
             method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS Fix
             body: JSON.stringify(payload)
         })
         .then(res => res.json())
         .then(data => {
             if (data.status === "success") {
                 alert("✅ बिल यशस्वीरित्या सेव्ह झाले!");
+                
+                // प्रिंट पावतीसाठी डेटा भरणे
+                document.getElementById('r_invoice').innerText = data.invoiceNo;
+                document.getElementById('r_name').innerText = document.getElementById('name').value;
+                document.getElementById('r_mobile').innerText = document.getElementById('mobile').value;
+                document.getElementById('r_total').innerText = document.getElementById('totalAmount').value;
+                document.getElementById('r_discount').innerText = document.getElementById('discount').value || "0";
+                document.getElementById('r_final').innerText = document.getElementById('finalAmount').value;
+                
+                // प्रिंट एरिया आणि बाकीची बटणे सुरु करणे
+                document.getElementById('receiptPrintArea').style.display = 'block';
                 document.getElementById('submitBtn').style.display = 'none';
+                document.getElementById('printBtn').style.display = 'block';
                 document.getElementById('whatsappBtn').style.display = 'block';
                 document.getElementById('newBillBtn').style.display = 'block';
             }
@@ -178,7 +226,7 @@
         });
     });
 
-    // ४. WhatsApp वर पावती पाठवणे (Send WhatsApp Message)
+    // ४. WhatsApp वर पावती पाठवणे
     function sendWhatsApp() {
         let mobile = document.getElementById('mobile').value;
         let name = document.getElementById('name').value;
