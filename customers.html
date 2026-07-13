@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Cloth Shop ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 text-white flex flex-col shadow-xl">
+        <div class="p-6"><h2 class="text-2xl font-bold text-blue-400">Shop ERP</h2></div>
+        <nav class="flex-1 mt-4">
+            <a href="dashboard.html" class="block py-3 px-6 hover:bg-gray-700">📊 डॅशबोर्ड</a>
+            <a href="pos.html" class="block py-3 px-6 hover:bg-gray-700">🛒 POS (बिलिंग)</a>
+            <a href="customers.html" class="block py-3 px-6 bg-gray-700 border-l-4 border-blue-500">👥 ग्राहक (Customers)</a>
+            <a href="reports.html" class="block py-3 px-6 hover:bg-gray-700">📈 अहवाल (Reports)</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">ग्राहक व्यवस्थापन (Customer Ledger)</h2>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow font-medium">
+                + नवीन ग्राहक जोडा
+            </button>
+        </header>
+
+        <div class="p-6 flex-1 overflow-y-auto">
+            
+            <!-- Outstanding Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm border-l-4 border-blue-500">
+                    <h4 class="text-gray-500 dark:text-gray-400 text-sm">एकूण ग्राहक (Total Customers)</h4>
+                    <p class="text-2xl font-bold dark:text-white">450</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm border-l-4 border-red-500">
+                    <h4 class="text-gray-500 dark:text-gray-400 text-sm">एकूण येणे बाकी (Total Outstanding)</h4>
+                    <p class="text-2xl font-bold text-red-600">₹45,200.00</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-sm border-l-4 border-green-500">
+                    <h4 class="text-gray-500 dark:text-gray-400 text-sm">आज जमा झालेली उधारी (Today's Recovery)</h4>
+                    <p class="text-2xl font-bold text-green-600">₹3,500.00</p>
+                </div>
+            </div>
+
+            <!-- Customer Search -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-4 flex">
+                <input type="text" placeholder="ग्राहकाचे नाव किंवा मोबाईल नंबर शोधा..." class="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+
+            <!-- Customer Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <tr>
+                            <th class="p-4 border-b">नाव (Name)</th>
+                            <th class="p-4 border-b">मोबाईल नंबर</th>
+                            <th class="p-4 border-b">एकूण खरेदी (Total Purchase)</th>
+                            <th class="p-4 border-b text-right">येणे बाकी (Outstanding)</th>
+                            <th class="p-4 border-b text-center">कृती (Action)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody" class="text-gray-700 dark:text-gray-400">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Receive Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">पेमेंट जमा करा (Receive Payment)</h3>
+            <p id="payCustomerName" class="text-sm font-semibold text-blue-600 mb-4">Customer Name</p>
+            
+            <div class="flex justify-between mb-4 text-sm">
+                <span class="text-gray-600 dark:text-gray-400">थकबाकी (Outstanding):</span>
+                <span id="payOutstandingAmt" class="font-bold text-red-500">₹0.00</span>
+            </div>
+
+            <label class="block text-sm text-gray-600 dark:text-gray-400">जमा रक्कम (Amount to Receive)</label>
+            <input type="number" min="1" class="w-full p-2 border rounded mt-1 mb-4 dark:bg-gray-700 dark:text-white text-lg font-bold text-green-600">
+
+            <label class="block text-sm text-gray-600 dark:text-gray-400">पेमेंट पद्धत (Mode)</label>
+            <select class="w-full p-2 border rounded mt-1 mb-6 dark:bg-gray-700 dark:text-white">
+                <option value="cash">Cash (रोख)</option>
+                <option value="upi">UPI / PhonePe</option>
+                <option value="bank">Bank Transfer</option>
+            </select>
+
+            <div class="flex justify-end space-x-2">
+                <button id="closePayModal" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">रद्द करा</button>
+                <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-bold">जमा करा</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="modules/customers/customers.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Master - Cloth Shop ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans flex h-screen overflow-hidden">
+
+    <!-- Sidebar (Same as Dashboard) -->
+    <aside class="w-64 bg-gray-800 text-white flex flex-col shadow-xl">
+        <div class="p-6"><h2 class="text-2xl font-bold text-blue-400">Shop ERP</h2></div>
+        <nav class="flex-1 mt-4">
+            <a href="dashboard.html" class="block py-3 px-6 hover:bg-gray-700">📊 डॅशबोर्ड</a>
+            <a href="products.html" class="block py-3 px-6 bg-gray-700 border-l-4 border-blue-500">👕 प्रॉडक्ट मास्टर</a>
+            <a href="purchase.html" class="block py-3 px-6 hover:bg-gray-700">📥 खरेदी (Purchase)</a>
+            <a href="pos.html" class="block py-3 px-6 hover:bg-gray-700">🛒 POS (बिलिंग)</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">प्रॉडक्ट मास्टर</h2>
+            <button id="openAddModalBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow">
+                + नवीन प्रॉडक्ट जोडा
+            </button>
+        </header>
+
+        <!-- Product List Table -->
+        <div class="p-6 flex-1 overflow-y-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        <tr>
+                            <th class="p-4 border-b">SKU / Barcode</th>
+                            <th class="p-4 border-b">प्रॉडक्टचे नाव</th>
+                            <th class="p-4 border-b">कॅटेगरी</th>
+                            <th class="p-4 border-b">खरेदी किंमत</th>
+                            <th class="p-4 border-b">विक्री किंमत (MRP)</th>
+                            <th class="p-4 border-b">स्टॉक</th>
+                            <th class="p-4 border-b text-center">कृती</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody" class="text-gray-700 dark:text-gray-400">
+                        <!-- Products will be loaded here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Product Modal -->
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">नवीन प्रॉडक्ट जोडा</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <form id="productForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Basic Info -->
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">प्रॉडक्टचे नाव *</label>
+                        <input type="text" id="p_name" required class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">कॅटेगरी</label>
+                        <select id="p_category" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="Men">Men (पुरुष)</option>
+                            <option value="Women">Women (महिला)</option>
+                            <option value="Kids">Kids (लहान मुले)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">ब्रँड</label>
+                        <input type="text" id="p_brand" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+
+                    <!-- Codes & Taxes -->
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">SKU</label>
+                        <div class="flex">
+                            <input type="text" id="p_sku" class="w-full p-2 border rounded-l mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <button type="button" id="generateSkuBtn" class="bg-gray-200 dark:bg-gray-600 p-2 rounded-r mt-1">Auto</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">HSN कोड</label>
+                        <input type="text" id="p_hsn" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">GST %</label>
+                        <select id="p_gst" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                        </select>
+                    </div>
+
+                    <!-- Pricing -->
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">खरेदी किंमत (Purchase ₹)</label>
+                        <input type="number" id="p_purchase_price" required class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">MRP (₹)</label>
+                        <input type="number" id="p_mrp" required class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400">रिटेल किंमत (Sale ₹)</label>
+                        <input type="number" id="p_retail" required class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4 border-t pt-4">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">रद्द करा</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">सेव्ह करा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="modules/products/products.js"></script>
+</body>
+</html>

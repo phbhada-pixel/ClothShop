@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Cloth Shop ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans leading-normal tracking-normal flex">
+
+    <!-- Sidebar (Left) -->
+    <aside class="w-64 bg-gray-800 text-white min-h-screen hidden md:block shadow-xl">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-blue-400">Shop ERP</h2>
+        </div>
+        <nav class="mt-4">
+            <a href="dashboard.html" class="block py-3 px-6 hover:bg-gray-700 bg-gray-700 border-l-4 border-blue-500">📊 डॅशबोर्ड</a>
+            <a href="products.html" class="block py-3 px-6 hover:bg-gray-700">👕 प्रॉडक्ट मास्टर</a>
+            <a href="pos.html" class="block py-3 px-6 hover:bg-gray-700">🛒 POS (बिलिंग)</a>
+            <a href="inventory.html" class="block py-3 px-6 hover:bg-gray-700">📦 इन्व्हेंटरी</a>
+            <a href="#" id="logoutBtn" class="block py-3 px-6 text-red-400 hover:bg-gray-700 mt-10">🚪 लॉगआउट</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content (Right) -->
+    <main class="flex-1 w-full flex flex-col">
+        <!-- Topbar -->
+        <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">डॅशबोर्ड</h2>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm font-medium text-gray-600 dark:text-gray-300" id="userName">Admin</span>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-6 overflow-y-auto h-full">
+            
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Card 1 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border-l-4 border-blue-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm">आजची विक्री (Today's Sales)</h3>
+                    <p class="text-2xl font-bold text-gray-800 dark:text-white" id="todaySales">₹0.00</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border-l-4 border-green-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm">आजचा नफा (Today's Profit)</h3>
+                    <p class="text-2xl font-bold text-gray-800 dark:text-white" id="todayProfit">₹0.00</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border-l-4 border-yellow-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm">स्टॉक व्हॅल्यू (Stock Value)</h3>
+                    <p class="text-2xl font-bold text-gray-800 dark:text-white" id="stockValue">₹0.00</p>
+                </div>
+                <!-- Card 4 -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-sm border-l-4 border-red-500">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm">Low Stock Alerts</h3>
+                    <p class="text-2xl font-bold text-red-500" id="lowStockAlerts">0</p>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">मागील ७ दिवसांची विक्री</h3>
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module" src="modules/dashboard/dashboard.js"></script>
+</body>
+</html>

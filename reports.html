@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Cloth Shop ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-800 text-white flex flex-col shadow-xl">
+        <div class="p-6"><h2 class="text-2xl font-bold text-blue-400">Shop ERP</h2></div>
+        <nav class="flex-1 mt-4">
+            <a href="dashboard.html" class="block py-3 px-6 hover:bg-gray-700">📊 डॅशबोर्ड</a>
+            <a href="reports.html" class="block py-3 px-6 bg-gray-700 border-l-4 border-blue-500">📈 अहवाल (Reports)</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">अहवाल आणि विश्लेषण (Reports & Analytics)</h2>
+            <div class="space-x-2">
+                <input type="month" class="p-2 border rounded dark:bg-gray-700 dark:text-white" value="2026-07">
+                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                    ⬇ Export to Excel
+                </button>
+            </div>
+        </header>
+
+        <div class="p-6 flex-1 overflow-y-auto">
+            
+            <!-- Profit & Loss Summary -->
+            <h3 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4">नफा आणि तोटा (Profit & Loss) - जुलै २०२६</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-b-4 border-blue-500">
+                    <p class="text-gray-500 text-sm">एकूण विक्री (Total Sales)</p>
+                    <p class="text-2xl font-bold dark:text-white">₹3,45,000</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-b-4 border-yellow-500">
+                    <p class="text-gray-500 text-sm">खरेदी किंमत (Cost of Goods)</p>
+                    <p class="text-2xl font-bold dark:text-white">₹2,10,000</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-b-4 border-red-500">
+                    <p class="text-gray-500 text-sm">खर्च (Expenses - Rent, Salary)</p>
+                    <p class="text-2xl font-bold text-red-500">₹35,000</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-b-4 border-green-500">
+                    <p class="text-gray-500 text-sm">निव्वळ नफा (Net Profit)</p>
+                    <p class="text-2xl font-bold text-green-600">₹1,00,000</p>
+                </div>
+            </div>
+
+            <!-- GST Summary Section -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
+                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4">GST सारांश (GST Summary)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <h4 class="font-semibold text-gray-600 dark:text-gray-400">Output GST (ग्राहकांकडून जमा केलेला)</h4>
+                        <div class="mt-2 text-xl font-bold text-blue-600">₹18,500.00</div>
+                    </div>
+                    <div class="border dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <h4 class="font-semibold text-gray-600 dark:text-gray-400">Input GST (खरेदीवर दिलेला - ITC)</h4>
+                        <div class="mt-2 text-xl font-bold text-green-600">₹12,200.00</div>
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
+                    <h4 class="text-lg font-bold text-yellow-800 dark:text-yellow-500">
+                        सरकारला भरायचा उर्वरित GST (Tax Payable): ₹6,300.00
+                    </h4>
+                </div>
+            </div>
+
+            <!-- Category Wise Sales Chart -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-300 mb-4">कॅटेगरीनुसार विक्री (Category Sales)</h3>
+                <div class="w-full h-64 flex justify-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module" src="modules/reports/reports.js"></script>
+</body>
+</html>
