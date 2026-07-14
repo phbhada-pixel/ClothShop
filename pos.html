@@ -6,11 +6,24 @@
     <title>POS - Cloth Shop ERP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Print CSS: लपवण्यासाठी -->
-    <style>
+   <style>
+        /* नॉर्मल स्क्रीनवर प्रिंट एरिया लपवणे */
+        @media screen {
+            #printArea { display: none !important; }
+        }
+        
+        /* प्रिंट करताना फक्त प्रिंट एरिया दाखवणे */
         @media print {
             body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 300px; padding: 10px; font-family: monospace; }
+            #printArea { 
+                display: block !important; 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                visibility: visible; 
+            }
+            #printArea * { visibility: visible; }
         }
     </style>
 </head>
