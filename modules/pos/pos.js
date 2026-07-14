@@ -222,12 +222,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // प्रिंट करण्यापूर्वी 'hidden' क्लास काढा आणि प्रिंट झाल्यावर परत लावा
-                printArea.classList.remove('hidden');
-                window.print();
-                printArea.classList.add('hidden');
-                // ----------------------------------------------------
+               // प्रिंट करण्यासाठी 'hidden' क्लास काढा
+printArea.classList.remove('hidden');
 
+// ब्राउझरला डिझाईन लोड करण्यासाठी अर्ध्या सेकंदाचा वेळ द्या
+setTimeout(() => {
+    window.print();
+    
+    // प्रिंट डायलॉग बंद झाल्यावर पुन्हा लपवा
+    printArea.classList.add('hidden');
+}, 500);
                 // कार्ट रिकामी करून नवीन बिलासाठी तयार करा             
                 // प्रिंटची कमांड द्या
                 window.print();
