@@ -23,21 +23,26 @@
             
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-400">सप्लायर (Supplier)</label>
-                        <select class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:text-white">
-                            <option>Mukesh Textiles (Mumbai)</option>
-                            <option>Surat Fashion Hub</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-400">Invoice Number</label>
-                        <input type="text" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600 dark:text-gray-400">तारीख</label>
-                        <input type="date" id="purchase_date" class="w-full p-2 border rounded mt-1 dark:bg-gray-700 dark:text-white">
-                    </div>
+                    <!-- १. सप्लायर (Supplier) -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2">सप्लायर (Supplier Name)</label>
+    <input type="text" id="supplierName" placeholder="सप्लायरचे नाव टाका" class="w-full p-2 border rounded focus:outline-none focus:border-blue-500">
+</div>
+
+<!-- २. Invoice Number -->
+<div class="mb-4">
+    <label class="block text-gray-700 font-bold mb-2">Invoice Number</label>
+    <input type="text" id="purchaseInvoiceNo" placeholder="बिलाचा नंबर टाका" class="w-full p-2 border rounded focus:outline-none focus:border-blue-500">
+</div>
+
+<!-- ३. प्रॉडक्ट सर्च करण्यासाठी Barcode/SKU बॉक्स -->
+<div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+    <label class="block text-blue-800 font-bold mb-2">Barcode किंवा SKU स्कॅन करा / सर्च करा...</label>
+    <div class="flex gap-2">
+        <input type="text" id="purchaseBarcodeInput" placeholder="उदा. MEN-45812 टाईप करून Enter दाबा" class="w-full p-3 border border-blue-400 rounded shadow-sm focus:outline-none focus:border-blue-600 font-mono">
+        <button id="addPurchaseItemBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold">जोडा (Add)</button>
+    </div>
+</div>
                 </div>
 
                 <!-- Product Search/Add to Bill -->
