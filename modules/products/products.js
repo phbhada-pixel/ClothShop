@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             purchase_price: parseFloat(document.getElementById('p_purchase_price').value),
             mrp: parseFloat(document.getElementById('p_mrp').value),
             retail_price: parseFloat(document.getElementById('p_retail').value)
+            stock: parseInt(document.getElementById('p_stock').value) || 0
         };
 
         try {
