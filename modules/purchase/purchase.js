@@ -3,56 +3,71 @@ import { supabase } from '../../js/supabase.js';
 document.addEventListener('DOMContentLoaded', () => {
     let purchaseCart = [];
     
-    const barcodeInput = document.getElementById('purchaseBarcodeInput');
-    const addBtn = document.getElementById('addPurchaseItemBtn'); // नवीन बटण जोडले
+    // नवीन HTML IDs
+    const searchInput = document.getElementById('purchaseProductSearch');
+    const resultsDiv = document.getElementById('searchResults');
     const supplierInput = document.getElementById('supplierName');
     const invoiceInput = document.getElementById('purchaseInvoiceNo');
     const saveBtn = document.getElementById('savePurchaseBtn');
 
-    // १. बारकोड/SKU टाकल्यावर डेटाबेसमधून प्रॉडक्ट शोधण्याचे फंक्शन
-    async function handleSearch() {
-        const code = barcodeInput.value.trim();
-        if (code) {
-            await searchProductForPurchase(code);
-            barcodeInput.value = '';
-            barcodeInput.focus();
-        }
-    }
-
-    // Enter दाबल्यावर शोधणे
-    if (barcodeInput) {
-        barcodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleSearch();
-        });
-    }
-
-    // 'जोडा (Add)' बटणावर क्लिक केल्यावर शोधणे
-    if (addBtn) {
-        addBtn.addEventListener('click', handleSearch);
-    }
-
-    // Supabase मधून प्रॉडक्ट शोधणे
-    async function searchProductForPurchase(code) {
-        try {
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                // .ilike वापरल्याने कॅपिटल/स्मॉल अक्षरांचा फरक पडणार नाही (उदा. men-123 आणि MEN-123 दोन्ही चालतील)
-                .or(`sku.ilike.${code},barcode.ilike.${code}`) 
-                .single();
-
-            if (error || !data) {
-                alert('❌ प्रॉडक्ट सापडले नाही! कृपया SKU बरोबर आहे का ते तपासा.');
+    // १. नावाने किंवा SKU ने प्रॉडक्ट शोधणे (Live Search)
+    if (searchInput) {
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            
+            // जर २ पेक्षा कमी अक्षरे असतील तर रिझल्ट बॉक्स लपवा
+            if (query.length < 2) {
+                resultsDiv.classList.add('hidden');
                 return;
             }
 
-            addToPurchaseCart(data);
-        } catch (err) {
-            console.error('Search error:', err);
-            alert('❌ प्रॉडक्ट शोधताना त्रुटी आली.');
-        }
+            try {
+                // डेटाबेसमधून नाव किंवा SKU ने शोधणे
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*')
+                    .or(`name.ilike.%${query}%,sku.ilike.%${query}%`)
+                    .limit(10); // जास्तीत जास्त १० प्रॉडक्ट्स दाखवा
+
+                if (error) throw error;
+
+                resultsDiv.innerHTML = ''; // जुने रिझल्ट्स पुसा
+
+                if (data && data.length > 0) {
+                    // आलेले प्रॉडक्ट्स यादीत (Dropdown) दाखवणे
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 cursor-pointer hover:bg-blue-100 border-b text-gray-800 font-semibold';
+                        div.innerHTML = `${item.name} <span class="text-sm text-gray-500 font-normal ml-2">(${item.sku}) - स्टॉक: ${item.stock}</span>`;
+                        
+                        // यादीतील नावावर क्लिक केल्यावर कार्टमध्ये ॲड करा
+                        div.onclick = () => {
+                            addToPurchaseCart(item);
+                            searchInput.value = ''; // सर्च बॉक्स रिकामा करा
+                            resultsDiv.classList.add('hidden'); // यादी लपवा
+                        };
+                        resultsDiv.appendChild(div);
+                    });
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    // जर काहीच सापडले नाही
+                    resultsDiv.innerHTML = '<div class="p-3 text-red-500">कोणतेही प्रॉडक्ट सापडले नाही...</div>';
+                    resultsDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Search error:', err);
+            }
+        });
+
+        // बॉक्सच्या बाहेर क्लिक केल्यावर यादी लपवणे
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput && e.target !== resultsDiv) {
+                resultsDiv.classList.add('hidden');
+            }
+        });
     }
 
+    // २. प्रॉडक्ट कार्टमध्ये जोडणे
     function addToPurchaseCart(product) {
         const existing = purchaseCart.find(item => item.id === product.id);
         if (existing) {
@@ -63,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPurchaseCart();
     }
 
+    // ३. कार्ट स्क्रीनवर दाखवणे
     function renderPurchaseCart() {
         const tbody = document.getElementById('purchaseCartBody');
         if (!tbody) return;
@@ -79,10 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="p-3">${index + 1}</td>
                     <td class="p-3 font-semibold">${item.name} <br><span class="text-xs text-gray-500">स्टॉक: ${item.stock}</span></td>
                     <td class="p-3">
-                        <input type="number" min="1" value="${item.qty}" onchange="updatePurchaseQty(${index}, this.value)" class="w-20 p-1 border rounded text-center">
+                        <input type="number" min="1" value="${item.qty}" onchange="updatePurchaseQty(${index}, this.value)" class="w-20 p-1 border rounded text-center focus:outline-none focus:border-blue-500">
                     </td>
                     <td class="p-3">
-                        <input type="number" min="0" value="${item.current_purchase_price}" onchange="updatePurchasePrice(${index}, this.value)" class="w-24 p-1 border rounded text-center">
+                        <input type="number" min="0" value="${item.current_purchase_price}" onchange="updatePurchasePrice(${index}, this.value)" class="w-24 p-1 border rounded text-center focus:outline-none focus:border-blue-500">
                     </td>
                     <td class="p-3 font-bold text-gray-700">₹${rowTotal.toFixed(2)}</td>
                     <td class="p-3 text-center">
@@ -111,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPurchaseCart();
     };
 
+    // ४. खरेदी सेव्ह करणे आणि स्टॉक अपडेट करणे
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
             if (purchaseCart.length === 0) {
@@ -128,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalAmount = purchaseCart.reduce((sum, item) => sum + (item.current_purchase_price * item.qty), 0);
 
             try {
+                // Purchases टेबलमध्ये सेव्ह करणे
                 const { data: purchaseData, error: purchaseError } = await supabase
                     .from('purchases')
                     .insert([{
@@ -140,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (purchaseError) throw purchaseError;
 
+                // Purchase Items मध्ये सेव्ह करून स्टॉक वाढवणे
                 for (let item of purchaseCart) {
                     await supabase.from('purchase_items').insert([{
                         purchase_id: purchaseData.id,
@@ -157,11 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 alert('✅ खरेदीचे बिल यशस्वीरित्या सेव्ह झाले आणि स्टॉक अपडेट झाला!');
+                
+                // फॉर्म रिसेट करणे
                 purchaseCart = [];
                 supplierInput.value = '';
                 invoiceInput.value = '';
                 renderPurchaseCart();
-                barcodeInput.focus();
+                searchInput.focus();
 
             } catch (err) {
                 console.error('Purchase error:', err);
