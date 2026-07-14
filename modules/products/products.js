@@ -9,60 +9,64 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateSkuBtn = document.getElementById('generateSkuBtn');
     const tbody = document.getElementById('productTableBody');
 
-    // Modal उघडणे आणि बंद करणे
+    // १. Modal उघडणे आणि बंद करणे
     const toggleModal = () => modal.classList.toggle('hidden');
-    openModalBtn.addEventListener('click', toggleModal);
-    closeModalBtn.addEventListener('click', toggleModal);
-    cancelBtn.addEventListener('click', toggleModal);
+    if(openModalBtn) openModalBtn.addEventListener('click', toggleModal);
+    if(closeModalBtn) closeModalBtn.addEventListener('click', toggleModal);
+    if(cancelBtn) cancelBtn.addEventListener('click', toggleModal);
 
-    // Auto Generate SKU (उदा. MEN-45812)
-    generateSkuBtn.addEventListener('click', () => {
-        const category = document.getElementById('p_category').value.substring(0, 3).toUpperCase();
-        const randomNum = Math.floor(10000 + Math.random() * 90000);
-        document.getElementById('p_sku').value = `${category}-${randomNum}`;
-    });
+    // २. Auto Generate SKU
+    if(generateSkuBtn) {
+        generateSkuBtn.addEventListener('click', () => {
+            const category = document.getElementById('p_category').value.substring(0, 3).toUpperCase();
+            const randomNum = Math.floor(10000 + Math.random() * 90000);
+            document.getElementById('p_sku').value = `${category}-${randomNum}`;
+        });
+    }
 
-    // १. डेटाबेसमध्ये नवीन प्रॉडक्ट सेव्ह करणे (Insert Data)
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    // ३. डेटाबेसमध्ये नवीन प्रॉडक्ट सेव्ह करणे (Insert Data)
+    if(form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        // फॉर्ममधील डेटा गोळा करणे
-        const productData = {
-            name: document.getElementById('p_name').value,
-            sku: document.getElementById('p_sku').value,
-            hsn_code: document.getElementById('p_hsn').value,
-            gst_percent: parseFloat(document.getElementById('p_gst').value),
-            purchase_price: parseFloat(document.getElementById('p_purchase_price').value),
-            mrp: parseFloat(document.getElementById('p_mrp').value),
-            retail_price: parseFloat(document.getElementById('p_retail').value)
-            stock: parseInt(document.getElementById('p_stock').value) || 0
-        };
+            // फॉर्ममधील डेटा गोळा करणे (Quantity/Stock सह)
+            const productData = {
+                name: document.getElementById('p_name').value,
+                sku: document.getElementById('p_sku').value,
+                hsn_code: document.getElementById('p_hsn').value,
+                gst_percent: parseFloat(document.getElementById('p_gst').value) || 0,
+                purchase_price: parseFloat(document.getElementById('p_purchase_price').value) || 0,
+                mrp: parseFloat(document.getElementById('p_mrp').value) || 0,
+                retail_price: parseFloat(document.getElementById('p_retail').value) || 0,
+                stock: parseInt(document.getElementById('p_stock').value) || 0
+            };
 
-        try {
-            // Supabase च्या 'products' टेबलमध्ये डेटा इन्सर्ट करणे
-            const { data, error } = await supabase
-                .from('products')
-                .insert([productData]);
+            try {
+                // Supabase च्या 'products' टेबलमध्ये इन्सर्ट करणे
+                const { data, error } = await supabase
+                    .from('products')
+                    .insert([productData]);
 
-            if (error) throw error; 
+                if (error) throw error; 
 
-            alert('✅ प्रॉडक्ट यशस्वीरित्या डेटाबेसमध्ये सेव्ह केले!');
-            form.reset(); // फॉर्म रिकामा करा
-            toggleModal(); // पॉप-अप बंद करा
-            loadProducts(); // टेबल रिफ्रेश करून नवीन प्रॉडक्ट दाखवा
-            
-        } catch (error) {
-            console.error('Error saving product:', error.message);
-            alert('❌ त्रुटी: प्रॉडक्ट सेव्ह होऊ शकले नाही. ' + error.message);
-        }
-    });
+                alert('✅ प्रॉडक्ट यशस्वीरित्या डेटाबेसमध्ये सेव्ह केले!');
+                form.reset(); // फॉर्म रिकामा करा
+                toggleModal(); // पॉप-अप बंद करा
+                loadProducts(); // टेबल रिफ्रेश करून नवीन प्रॉडक्ट दाखवा
+                
+            } catch (error) {
+                console.error('Error saving product:', error.message);
+                alert('❌ त्रुटी: प्रॉडक्ट सेव्ह होऊ शकले नाही. ' + error.message);
+            }
+        });
+    }
 
-    // २. डेटाबेसमधून प्रॉडक्ट्स लोड करणे (Fetch Data)
+    // ४. डेटाबेसमधून प्रॉडक्ट्स लोड करणे (Fetch Data)
     async function loadProducts() {
+        if(!tbody) return;
         tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">प्रॉडक्ट्स लोड होत आहेत... (Loading...)</td></tr>`;
 
         try {
-            // Supabase मधून सर्व प्रॉडक्ट्स आणणे (नवीन प्रॉडक्ट सर्वात वर दिसण्यासाठी order by वापरले आहे)
             const { data: products, error } = await supabase
                 .from('products')
                 .select('*')
@@ -78,11 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // डेटाबेस मधून आलेले प्रॉडक्ट्स टेबलमध्ये दाखवणे
-           // डेटाबेस मधून आलेले प्रॉडक्ट्स टेबलमध्ये दाखवणे
+            // टेबलमध्ये प्रॉडक्ट्स आणि स्टॉक दाखवणे
             products.forEach(p => {
                 let profitAmt = p.retail_price - p.purchase_price;
-                // जर स्टॉक ५ पेक्षा कमी असेल तर लाल रंग, नाहीतर हिरवा
+                
+                // स्टॉकनुसार हिरवा किंवा लाल रंग
                 let stockBadge = p.stock > 5 
                     ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-bold">${p.stock} Pcs</span>` 
                     : `<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-bold">${p.stock} Pcs (Low)</span>`;
@@ -96,18 +100,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td class="p-4 text-gray-800 dark:text-gray-200">₹${p.mrp}</td>
                         <td class="p-4">${stockBadge}</td>
                         <td class="p-4 text-center">
-                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded font-bold">Delete</button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded font-bold border border-red-200">Delete</button>
                         </td>
                     </tr>
                 `;
-            });  
+            });
         } catch (error) {
             console.error('Error fetching products:', error.message);
             tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">डेटा लोड करताना त्रुटी आली!</td></tr>`;
         }
     }
 
-    // ३. प्रॉडक्ट डिलीट करण्याचे फंक्शन (Global scope मध्ये ठेवले जेणेकरून HTML मधून कॉल करता येईल)
+    // ५. प्रॉडक्ट डिलीट करण्याचे फंक्शन
     window.deleteProduct = async (id) => {
         if(confirm('तुम्हाला खरोखरच हे प्रॉडक्ट डिलीट करायचे आहे का?')) {
             try {
@@ -126,6 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // पेज लोड झाल्यावर प्रॉडक्ट्स दाखवा
+    // पेज लोड झाल्यावर लगेच प्रॉडक्ट्स दाखवा
     loadProducts();
 });
