@@ -158,8 +158,77 @@ document.addEventListener('DOMContentLoaded', () => {
                     await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
                 }
 
-                alert(`✅ बिल यशस्वीरित्या सेव्ह झाले!\nबिल नंबर: ${invoiceNo}`);
+               alert(`✅ बिल यशस्वीरित्या सेव्ह झाले!\nबिल नंबर: ${invoiceNo}`);
                 
+                // ----------------------------------------------------
+                // 🖨️ थर्मल प्रिंटरसाठी बिलाचे डिझाईन (Receipt Generation)
+                // ----------------------------------------------------
+                const printArea = document.getElementById('printArea');
+                const dateStr = new Date().toLocaleString('mr-IN');
+                
+                let itemsHtml = '';
+                cart.forEach(item => {
+                    let itemTotal = item.retail_price * item.qty;
+                    itemsHtml += `
+                        <tr style="border-bottom: 1px dashed #000;">
+                            <td style="padding: 4px 0; font-size: 12px;">${item.name}</td>
+                            <td style="text-align: center; font-size: 12px;">${item.qty}</td>
+                            <td style="text-align: right; font-size: 12px;">₹${item.retail_price}</td>
+                            <td style="text-align: right; font-size: 12px;">₹${itemTotal.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+                printArea.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <h2 style="font-size: 20px; font-weight: bold; margin: 0;">Shop ERP</h2>
+                        <p style="margin: 0; font-size: 12px;">Main Road, Market Yard, Latur</p>
+                        <p style="margin: 0; font-size: 12px;">GST: 27AABCU9603R1Z2</p>
+                    </div>
+                    <hr style="border: 1px dashed black; margin: 5px 0;">
+                    <div style="font-size: 12px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                        <span><strong>Bill:</strong> ${invoiceNo}</span>
+                        <span>${dateStr.split(',')[0]}</span>
+                    </div>
+                    <hr style="border: 1px dashed black; margin: 5px 0;">
+                    
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid black; font-size: 12px;">
+                                <th style="text-align: left; padding-bottom: 4px;">Item</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th style="text-align: right;">Rate</th>
+                                <th style="text-align: right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <hr style="border: 1px dashed black; margin: 5px 0;">
+                    <div style="font-size: 12px; text-align: right;">
+                        <div style="display: flex; justify-content: space-between;"><span>Subtotal:</span> <span>₹${subTotal.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between;"><span>GST:</span> <span>₹${taxTotal.toFixed(2)}</span></div>
+                        <div style="display: flex; justify-content: space-between;"><span>Discount:</span> <span>- ₹${discount.toFixed(2)}</span></div>
+                        <hr style="border: 1px dashed black; margin: 5px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+                            <span>Grand Total:</span> <span>₹${grandTotal.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <hr style="border: 1px dashed black; margin: 10px 0;">
+                    <div style="text-align: center; font-size: 12px; font-weight: bold;">
+                        <p>Thank You! Visit Again.</p>
+                    </div>
+                `;
+
+                // प्रिंट करण्यापूर्वी 'hidden' क्लास काढा आणि प्रिंट झाल्यावर परत लावा
+                printArea.classList.remove('hidden');
+                window.print();
+                printArea.classList.add('hidden');
+                // ----------------------------------------------------
+
+                // कार्ट रिकामी करून नवीन बिलासाठी तयार करा             
                 // प्रिंटची कमांड द्या
                 window.print();
 
