@@ -39,7 +39,9 @@
 <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
     <label class="block text-blue-800 font-bold mb-2">Barcode किंवा SKU स्कॅन करा / सर्च करा...</label>
     <div class="flex gap-2">
-        <input type="text" id="purchaseBarcodeInput" placeholder="उदा. MEN-45812 टाईप करून Enter दाबा" class="w-full p-3 border border-blue-400 rounded shadow-sm focus:outline-none focus:border-blue-600 font-mono">
+        <!-- नवीन सर्च बॉक्स -->
+<input type="text" id="purchaseProductSearch" placeholder="प्रॉडक्टचे नाव टाईप करा..." class="w-full p-3 border rounded">
+<div id="searchResults" class="absolute bg-white border w-full z-10 hidden"></div>
         <button id="addPurchaseItemBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold">जोडा (Add)</button>
     </div>
 </div>
