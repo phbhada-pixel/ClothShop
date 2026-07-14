@@ -79,29 +79,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // डेटाबेस मधून आलेले प्रॉडक्ट्स टेबलमध्ये दाखवणे
+           // डेटाबेस मधून आलेले प्रॉडक्ट्स टेबलमध्ये दाखवणे
             products.forEach(p => {
-                // नफा (Profit) काढण्याचे उदाहरण
                 let profitAmt = p.retail_price - p.purchase_price;
+                // जर स्टॉक ५ पेक्षा कमी असेल तर लाल रंग, नाहीतर हिरवा
+                let stockBadge = p.stock > 5 
+                    ? `<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-bold">${p.stock} Pcs</span>` 
+                    : `<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-bold">${p.stock} Pcs (Low)</span>`;
 
                 tbody.innerHTML += `
                     <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                         <td class="p-4 font-mono text-sm dark:text-gray-300">${p.sku}</td>
                         <td class="p-4 font-semibold text-gray-800 dark:text-white">${p.name}</td>
-                        <td class="p-4 text-gray-500 dark:text-gray-400">${p.hsn_code || '-'}</td>
+                        <td class="p-4 text-green-600 font-bold">+₹${profitAmt} नफा</td>
                         <td class="p-4 text-gray-600 dark:text-gray-300">₹${p.purchase_price}</td>
                         <td class="p-4 text-gray-800 dark:text-gray-200">₹${p.mrp}</td>
-                        <td class="p-4">
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-bold">
-                                +₹${profitAmt} नफा
-                            </span>
-                        </td>
+                        <td class="p-4">${stockBadge}</td>
                         <td class="p-4 text-center">
-                            <button class="text-blue-500 hover:underline">Edit</button>
-                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:underline ml-2">Delete</button>
+                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded font-bold">Delete</button>
                         </td>
                     </tr>
                 `;
-            });
+            });  
         } catch (error) {
             console.error('Error fetching products:', error.message);
             tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-red-500">डेटा लोड करताना त्रुटी आली!</td></tr>`;
