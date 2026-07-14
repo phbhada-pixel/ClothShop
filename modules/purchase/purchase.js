@@ -3,32 +3,42 @@ import { supabase } from '../../js/supabase.js';
 document.addEventListener('DOMContentLoaded', () => {
     let purchaseCart = [];
     
-    // HTML मधील इनपुट बॉक्सेस
     const barcodeInput = document.getElementById('purchaseBarcodeInput');
+    const addBtn = document.getElementById('addPurchaseItemBtn'); // नवीन बटण जोडले
     const supplierInput = document.getElementById('supplierName');
     const invoiceInput = document.getElementById('purchaseInvoiceNo');
     const saveBtn = document.getElementById('savePurchaseBtn');
 
-    // १. बारकोड/SKU टाकल्यावर डेटाबेसमधून प्रॉडक्ट शोधणे
+    // १. बारकोड/SKU टाकल्यावर डेटाबेसमधून प्रॉडक्ट शोधण्याचे फंक्शन
+    async function handleSearch() {
+        const code = barcodeInput.value.trim();
+        if (code) {
+            await searchProductForPurchase(code);
+            barcodeInput.value = '';
+            barcodeInput.focus();
+        }
+    }
+
+    // Enter दाबल्यावर शोधणे
     if (barcodeInput) {
-        barcodeInput.addEventListener('keypress', async (e) => {
-            if (e.key === 'Enter') {
-                const code = barcodeInput.value.trim();
-                if (code) {
-                    await searchProductForPurchase(code);
-                    barcodeInput.value = '';
-                    barcodeInput.focus();
-                }
-            }
+        barcodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSearch();
         });
     }
 
+    // 'जोडा (Add)' बटणावर क्लिक केल्यावर शोधणे
+    if (addBtn) {
+        addBtn.addEventListener('click', handleSearch);
+    }
+
+    // Supabase मधून प्रॉडक्ट शोधणे
     async function searchProductForPurchase(code) {
         try {
             const { data, error } = await supabase
                 .from('products')
                 .select('*')
-                .or(`sku.eq.${code},barcode.eq.${code}`)
+                // .ilike वापरल्याने कॅपिटल/स्मॉल अक्षरांचा फरक पडणार नाही (उदा. men-123 आणि MEN-123 दोन्ही चालतील)
+                .or(`sku.ilike.${code},barcode.ilike.${code}`) 
                 .single();
 
             if (error || !data) {
@@ -39,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addToPurchaseCart(data);
         } catch (err) {
             console.error('Search error:', err);
+            alert('❌ प्रॉडक्ट शोधताना त्रुटी आली.');
         }
     }
 
@@ -47,13 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (existing) {
             existing.qty += 1;
         } else {
-            // खरेदीसाठी कार्टमध्ये टाकताना आपण 'खरेदी किंमत' (purchase_price) वापरतो
             purchaseCart.push({ ...product, qty: 1, current_purchase_price: product.purchase_price });
         }
         renderPurchaseCart();
     }
 
-    // २. खरेदी कार्ट स्क्रीनवर दाखवणे
     function renderPurchaseCart() {
         const tbody = document.getElementById('purchaseCartBody');
         if (!tbody) return;
@@ -87,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(totalEl) totalEl.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // ग्लोबल फंक्शन्स (कार्ट अपडेट करण्यासाठी)
     window.updatePurchaseQty = (index, qty) => {
         purchaseCart[index].qty = parseInt(qty) || 1;
         renderPurchaseCart();
@@ -103,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPurchaseCart();
     };
 
-    // ३. खरेदी सेव्ह करणे आणि स्टॉक वाढवणे (Auto Stock Addition)
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
             if (purchaseCart.length === 0) {
@@ -121,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalAmount = purchaseCart.reduce((sum, item) => sum + (item.current_purchase_price * item.qty), 0);
 
             try {
-                // १. Purchases (मुख्य बिल) टेबलमध्ये डेटा टाका
                 const { data: purchaseData, error: purchaseError } = await supabase
                     .from('purchases')
                     .insert([{
@@ -134,10 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (purchaseError) throw purchaseError;
 
-                // २. प्रत्येक आयटम सेव्ह करा आणि प्रॉडक्टचा 'स्टॉक' वाढवा
                 for (let item of purchaseCart) {
-                    
-                    // Purchase Items मध्ये सेव्ह करा
                     await supabase.from('purchase_items').insert([{
                         purchase_id: purchaseData.id,
                         product_id: item.id,
@@ -146,10 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         total: item.current_purchase_price * item.qty
                     }]);
 
-                    // सर्वात महत्त्वाचे: स्टॉक वाढवणे! (Current Stock + New Qty)
                     const newStock = item.stock + item.qty;
-                    
-                    // स्टॉक अपडेट करणे (आणि जर सप्लायरने नवीन भाव लावला असेल तर खरेदी किंमतही अपडेट करणे)
                     await supabase.from('products').update({ 
                         stock: newStock,
                         purchase_price: item.current_purchase_price 
@@ -157,8 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 alert('✅ खरेदीचे बिल यशस्वीरित्या सेव्ह झाले आणि स्टॉक अपडेट झाला!');
-                
-                // फॉर्म रिकामा करा
                 purchaseCart = [];
                 supplierInput.value = '';
                 invoiceInput.value = '';
